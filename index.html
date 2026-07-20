@@ -284,12 +284,16 @@ var CONFIG = {
   // Code you give the patrol leaders in the leadership group chat.
   LEADER_CODE : "patrol26",
 
-  // YOUR private code. Opens the results dashboard. Do not share this one.
+  // YOUR private code. Opens the results screen. Do not share this one.
   SPL_CODE    : "haresh-spl",
 
-  // Paste your Google Apps Script web app URL here to collect results privately.
-  // Leave as "" and the site still works — leaders use "Copy summary" instead.
-  ENDPOINT    : "",
+  // Supabase. This key is INSERT-ONLY by design: the database security rules
+  // let it add check ins but NOT read them back, so it is safe in public code.
+  // Results are read from your Supabase dashboard / Excel export.
+  SUPABASE_URL : "https://dzwxjdiucltikvahgmju.supabase.co",
+  SUPABASE_KEY : "sb_publishable_GSpBMHqewH7KLxSmhmVmJw_mpXPIHJj",
+  SUPABASE_TABLE : "check_ins",
+  RESULTS_LINK : "https://supabase.com/dashboard/project/dzwxjdiucltikvahgmju/editor",
 
   MEETING     : "Summer Camp Prep"
 };
@@ -451,6 +455,22 @@ function payloadToText(d){
   if(d.notes) L.push("Notes: " + d.notes);
   return L.join("\n");
 }
+function toRow(d){
+  return {
+    submitted_at:   d.date,
+    meeting:        d.meeting,
+    patrol:         d.patrol,
+    present_count:  d.present.length,
+    present:        d.present.join(", "),
+    absent:         d.absent.join(", "),
+    camp_count:     d.campGoing.length,
+    camp_going:     d.campGoing.join(", "),
+    yell:           d.yell,
+    yell_performed: d.yellDone,
+    notes:          d.notes
+  };
+}
+
 $("submitBtn").addEventListener("click", function(){
   var btn = this;
   var d = buildPayload();
@@ -458,23 +478,33 @@ $("submitBtn").addEventListener("click", function(){
   if(d.present.length === 0){ $("formErr").textContent = "Tick at least one scout as present."; return; }
 
   state.lastSummary = payloadToText(d);
-  state.submitted[d.patrol] = true;
 
-  if(!CONFIG.ENDPOINT){
+  if(!CONFIG.SUPABASE_URL){
+    state.submitted[d.patrol] = true;
     $("doneMsg").textContent = "Tap Copy summary and paste it to Haresh.";
     $("backBtn").classList.add("hide");
     show("vDone");
     return;
   }
+
   btn.disabled = true; btn.textContent = "Sending…";
-  fetch(CONFIG.ENDPOINT, {
-    method:"POST", mode:"no-cors",
-    headers:{ "Content-Type":"text/plain;charset=utf-8" },
-    body: JSON.stringify(d)
-  }).then(function(){
+  fetch(CONFIG.SUPABASE_URL + "/rest/v1/" + CONFIG.SUPABASE_TABLE, {
+    method: "POST",
+    headers: {
+      "apikey":        CONFIG.SUPABASE_KEY,
+      "Authorization": "Bearer " + CONFIG.SUPABASE_KEY,
+      "Content-Type":  "application/json",
+      "Prefer":        "return=minimal"
+    },
+    body: JSON.stringify(toRow(d))
+  }).then(function(r){
+    if(!r.ok) throw new Error("http " + r.status);
+    state.submitted[d.patrol] = true;
     $("doneMsg").textContent = "Nice work. Haresh has your patrol's check in.";
+    $("copyBtn").classList.add("hide");
   }).catch(function(){
-    $("doneMsg").textContent = "Couldn't reach the server — tap Copy summary and send it to Haresh.";
+    $("doneMsg").textContent = "Couldn't reach the server. Tap Copy summary and send it to Haresh so it isn't lost.";
+    $("copyBtn").classList.remove("hide");
   }).then(function(){
     btn.disabled = false; btn.textContent = "Submit check in";
     $("backBtn").classList.add("hide");
@@ -502,63 +532,19 @@ $("backBtn").addEventListener("click", function(){
   openPick();
 });
 
-/* ---- SPL dashboard ---- */
-function openSpl(){ show("vSpl"); loadSpl(); }
-$("refreshBtn").addEventListener("click", loadSpl);
-
-function loadSpl(){
-  var body = $("splBody");
-  if(!CONFIG.ENDPOINT){
-    $("splSummary").textContent = "No results server connected yet.";
-    body.innerHTML = '<div class="empty">Add your Apps Script URL to <b>CONFIG.ENDPOINT</b> in this file to collect check ins here automatically.<br><br>Until then, patrol leaders send you their summary from the Copy summary button.</div>';
-    return;
-  }
-  $("splSummary").textContent = "Loading…";
-  body.innerHTML = "";
-  fetch(CONFIG.ENDPOINT + "?action=list")
-    .then(function(r){ return r.json(); })
-    .then(function(rows){ renderSpl(Array.isArray(rows) ? rows : []); })
-    .catch(function(){
-      $("splSummary").textContent = "Couldn't load results.";
-      body.innerHTML = '<div class="empty">Check that the Apps Script is deployed with access set to "Anyone".</div>';
-    });
+/* ---- SPL results launcher ----
+   The key in this page can WRITE check ins but deliberately cannot READ them,
+   so results are opened in Supabase (where only you are signed in). ---- */
+function openSpl(){
+  show("vSpl");
+  $("splSummary").textContent = "Check ins are saving to your Troop 751 database. Open it to view or export tonight's results.";
+  $("splBody").innerHTML =
+      '<a class="btn-submit" style="display:block;text-align:center;text-decoration:none;box-sizing:border-box" '
+    + 'href="' + CONFIG.RESULTS_LINK + '" target="_blank" rel="noopener">Open results</a>'
+    + '<div class="muted mt16">Only you can read the data — signing in to Supabase is what unlocks it. '
+    + 'Inside the table, use <b>Export &rarr; CSV</b> to open it in Excel.</div>';
 }
-function renderSpl(rows){
-  var today = new Date().toDateString();
-  var todays = rows.filter(function(r){ return new Date(r.date).toDateString() === today; });
-  var use = todays.length ? todays : rows;
-
-  if(!use.length){
-    $("splSummary").textContent = "No check ins yet.";
-    $("splBody").innerHTML = '<div class="empty">Nothing submitted yet tonight.</div>';
-    return;
-  }
-  var totalHere = 0, totalCamp = 0;
-  use.forEach(function(r){
-    totalHere += (r.present||[]).length;
-    totalCamp += (r.campGoing||[]).length;
-  });
-  $("splSummary").textContent = use.length + " of " + PATROLS.length + " patrols checked in · "
-    + totalHere + " scouts present · " + totalCamp + " going to summer camp";
-
-  $("splBody").innerHTML = use.map(function(r){
-    var present = (r.present||[]), absent = (r.absent||[]), camp = (r.campGoing||[]);
-    var h = '<div class="res">';
-    h += '<h3>' + esc(r.patrol) + '</h3>';
-    h += '<div class="meta">' + present.length + ' present · ' + absent.length + ' absent · '
-       + camp.length + ' going to camp · ' + new Date(r.date).toLocaleTimeString([], {hour:"numeric",minute:"2-digit"}) + '</div>';
-    if(present.length){
-      h += '<div class="chips">' + present.map(function(n){ return '<span class="chip">' + esc(n) + '</span>'; }).join("") + '</div>';
-    }
-    if(absent.length){
-      h += '<div class="chips">' + absent.map(function(n){ return '<span class="chip out">' + esc(n) + '</span>'; }).join("") + '</div>';
-    }
-    if(r.yell) h += '<div class="quote"><b>Yell' + (r.yellDone ? " (performed)" : " (not performed)") + ':</b>\n' + esc(r.yell) + '</div>';
-    if(r.notes) h += '<div class="quote"><b>Notes:</b>\n' + esc(r.notes) + '</div>';
-    h += '</div>';
-    return h;
-  }).join("");
-}
+$("refreshBtn").addEventListener("click", openSpl);
 
 /* ---- boot ---- */
 $("barSub").textContent = CONFIG.MEETING;
