@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Patrol Check Ins</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23163B2B'/><path d='M16 6l7 15H9z' fill='%23C9E265'/></svg>" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   CONFIG is in the <script> at the bottom — passcodes live there.
+   ============================================================ */
+:root{
+  --paper:#F5F4EE;
+  --card:#FFFFFF;
+  --ink:#12281E;
+  --ink-soft:#5C6E63;
+  --line:#DFDDD2;
+  --green:#163B2B;
+  --green-mid:#2F6B4F;
+  --lime:#C9E265;
+  --red:#B3402E;
+  --radius:14px;
+  --shadow:0 1px 2px rgba(18,40,30,.06), 0 8px 24px -12px rgba(18,40,30,.18);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:17px;line-height:1.5;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+h1,h2,h3,.display{font-family:"Bricolage Grotesque",Inter,system-ui,sans-serif;letter-spacing:-.02em;margin:0}
+.wrap{max-width:640px;margin:0 auto;padding:20px 18px 64px}
+.hide{display:none !important}
+
+/* ---------- top bar ---------- */
+.bar{
+  position:sticky;top:0;z-index:20;background:var(--green);color:#EAF2EC;
+  padding:14px 18px;padding-top:calc(14px + env(safe-area-inset-top));
+}
+.bar-in{max-width:640px;margin:0 auto;display:flex;align-items:center;gap:11px}
+.mark{width:30px;height:30px;border-radius:8px;background:var(--lime);display:grid;place-items:center;flex:none}
+.mark svg{width:17px;height:17px;display:block}
+.bar h1{font-size:17px;font-weight:800;color:#fff;line-height:1.2}
+.bar .sub{font-size:12.5px;color:#9DBBA9;line-height:1.2;margin-top:1px}
+.bar .spacer{margin-left:auto}
+.linkbtn{
+  background:transparent;border:1px solid #38614C;color:#B7CFC0;
+  font:inherit;font-size:13px;padding:6px 11px;border-radius:999px;cursor:pointer;
+}
+.linkbtn:hover{background:#1E4735;color:#fff}
+
+/* ---------- generic blocks ---------- */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)}
+.card + .card{margin-top:16px}
+.eyebrow{font-size:12px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--green-mid)}
+.muted{color:var(--ink-soft);font-size:14.5px}
+.mt8{margin-top:8px}.mt16{margin-top:16px}.mt24{margin-top:24px}.mt32{margin-top:32px}
+
+/* ---------- gate ---------- */
+.gate{max-width:400px;margin:0 auto;padding-top:44px;text-align:center}
+.gate .badge{
+  width:62px;height:62px;border-radius:17px;background:var(--green);
+  display:grid;place-items:center;margin:0 auto 22px
+}
+.gate .badge svg{width:32px;height:32px}
+.gate h2{font-size:30px;font-weight:800}
+.gate p{color:var(--ink-soft);font-size:15px;margin:9px 0 26px}
+input[type=password],input[type=text],textarea{
+  width:100%;font:inherit;color:var(--ink);background:var(--card);
+  border:1.5px solid var(--line);border-radius:11px;padding:14px 15px;
+}
+input:focus,textarea:focus{outline:none;border-color:var(--green-mid);box-shadow:0 0 0 3px rgba(47,107,79,.14)}
+.gate input{text-align:center;font-size:20px;letter-spacing:.16em;font-weight:600}
+.err{color:var(--red);font-size:14px;margin-top:12px;font-weight:500;min-height:20px}
+
+/* ---------- buttons (each its own identity) ---------- */
+.btn-go{
+  width:100%;margin-top:14px;background:var(--green);color:#fff;border:none;
+  font:inherit;font-weight:600;font-size:17px;padding:15px;border-radius:11px;cursor:pointer;
+  transition:transform .12s ease, background .15s ease;
+}
+.btn-go:hover{background:#1E5039}
+.btn-go:active{transform:scale(.985)}
+.btn-submit{
+  width:100%;background:var(--lime);color:var(--green);border:none;
+  font:inherit;font-weight:700;font-size:18px;padding:17px;border-radius:12px;cursor:pointer;
+  box-shadow:0 3px 0 #A6BF4A;transition:transform .1s ease, box-shadow .1s ease;
+}
+.btn-submit:hover{background:#D3EA76}
+.btn-submit:active{transform:translateY(3px);box-shadow:0 0 0 #A6BF4A}
+.btn-submit:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:0 3px 0 #A6BF4A}
+.btn-ghost{
+  background:transparent;border:1.5px solid var(--line);color:var(--ink);
+  font:inherit;font-size:15px;font-weight:500;padding:12px 18px;border-radius:10px;cursor:pointer;
+}
+.btn-ghost:hover{border-color:var(--green-mid);color:var(--green)}
+
+/* ---------- patrol picker ---------- */
+.pick{display:grid;gap:11px;margin-top:18px}
+.pick button{
+  display:flex;align-items:center;gap:14px;width:100%;text-align:left;
+  background:var(--card);border:1.5px solid var(--line);border-radius:13px;
+  padding:17px 18px;font:inherit;cursor:pointer;transition:border-color .15s, transform .12s;
+}
+.pick button:hover{border-color:var(--green-mid);transform:translateX(3px)}
+.dot{width:11px;height:11px;border-radius:50%;flex:none}
+.pick .nm{font-family:"Bricolage Grotesque",sans-serif;font-weight:600;font-size:18px}
+.pick .ct{margin-left:auto;color:var(--ink-soft);font-size:13.5px}
+.done-tag{margin-left:auto;font-size:12px;font-weight:600;color:var(--green-mid);background:#EAF3ED;padding:4px 9px;border-radius:999px}
+
+/* ---------- check rows ---------- */
+.rows{margin-top:6px}
+.row{
+  display:flex;align-items:center;gap:14px;padding:13px 4px;
+  border-bottom:1px solid var(--line);cursor:pointer;user-select:none;
+}
+.row:last-child{border-bottom:none}
+.box{
+  width:27px;height:27px;flex:none;border:2px solid #C2C9C4;border-radius:7px;
+  background:#fff;display:grid;place-items:center;transition:all .13s ease;
+}
+.box svg{width:15px;height:15px;opacity:0;transform:scale(.6);transition:all .13s ease}
+.row.on .box{background:var(--green);border-color:var(--green)}
+.row.on .box svg{opacity:1;transform:scale(1)}
+.row .label{font-size:16.5px}
+.row.on .label{color:var(--ink-soft);text-decoration:line-through;text-decoration-color:#B9C4BC}
+.row.task{align-items:flex-start;padding:15px 4px}
+.row.task .label{font-size:16px;line-height:1.45}
+.row.task.on .label{text-decoration:none;color:var(--ink)}
+
+/* ---------- progress ---------- */
+.prog{display:flex;align-items:center;gap:12px;margin-top:14px}
+.track{flex:1;height:7px;background:#E4E7E2;border-radius:999px;overflow:hidden}
+.fill{height:100%;background:var(--lime);border-radius:999px;width:0;transition:width .3s ease}
+.prog .n{font-size:14px;font-weight:600;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+
+textarea{min-height:88px;resize:vertical;font-size:16px;line-height:1.5}
+label.fld{display:block;font-size:14.5px;font-weight:600;margin:16px 0 7px}
+
+/* ---------- results ---------- */
+.res{border:1px solid var(--line);border-radius:13px;background:var(--card);padding:18px;margin-top:14px}
+.res h3{font-size:19px;font-weight:700}
+.res .meta{font-size:13px;color:var(--ink-soft);margin-top:3px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px}
+.chip{font-size:13px;padding:5px 10px;border-radius:999px;background:#EAF3ED;color:var(--green);font-weight:500}
+.chip.out{background:#F4EDEB;color:var(--red)}
+.quote{margin-top:12px;padding:12px 14px;background:#F7F8F5;border-left:3px solid var(--lime);border-radius:0 8px 8px 0;font-size:15px;white-space:pre-wrap}
+.empty{text-align:center;padding:48px 20px;color:var(--ink-soft)}
+
+/* ---------- success ---------- */
+.success{text-align:center;padding:52px 20px}
+.success .tick{width:74px;height:74px;border-radius:50%;background:var(--lime);display:grid;place-items:center;margin:0 auto 22px}
+.success .tick svg{width:36px;height:36px}
+.success h2{font-size:29px;font-weight:800}
+.success p{color:var(--ink-soft);margin-top:10px}
+@media (max-width:420px){ .wrap{padding:16px 14px 56px} .gate h2{font-size:26px} }
+@media (prefers-reduced-motion:reduce){ *{transition:none !important;animation:none !important} }
+</style>
+</head>
+<body>
+
+<div class="bar" id="bar">
+  <div class="bar-in">
+    <span class="mark"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3l8 17H4z" fill="#163B2B"/></svg></span>
+    <div>
+      <h1>Patrol Check Ins</h1>
+      <div class="sub" id="barSub">Summer Camp Prep</div>
+    </div>
+    <span class="spacer"></span>
+    <button class="linkbtn hide" id="backBtn">Back</button>
+  </div>
+</div>
+
+<!-- ===== GATE ===== -->
+<section id="vGate">
+  <div class="wrap">
+    <div class="gate">
+      <div class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="#C9E265" stroke-width="2" stroke-linecap="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></svg></div>
+      <h2>Patrol leaders only</h2>
+      <p>Enter the code from the leadership group chat.</p>
+      <input type="password" id="code" inputmode="text" autocomplete="off" placeholder="• • • • • •" />
+      <button class="btn-go" id="enterBtn">Enter</button>
+      <div class="err" id="gateErr"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== PATROL PICKER ===== -->
+<section id="vPick" class="hide">
+  <div class="wrap">
+    <div class="eyebrow">Step 1</div>
+    <h2 style="font-size:27px;margin-top:6px">Which patrol are you leading?</h2>
+    <p class="muted mt8">Pick your patrol to start its check in.</p>
+    <div class="pick" id="pickList"></div>
+  </div>
+</section>
+
+<!-- ===== CHECK IN FORM ===== -->
+<section id="vForm" class="hide">
+  <div class="wrap">
+    <div class="eyebrow" id="formEyebrow">Check in</div>
+    <h2 id="formTitle" style="font-size:29px;margin-top:6px">Patrol</h2>
+
+    <div class="card mt24">
+      <div class="eyebrow">Attendance</div>
+      <p class="muted mt8">Tick everyone who is here tonight.</p>
+      <div class="rows" id="attRows"></div>
+      <div class="prog">
+        <div class="track"><div class="fill" id="attFill"></div></div>
+        <span class="n" id="attCount">0 / 0</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">Task 1 &middot; Patrol Yell</div>
+      <p class="muted mt8">Make up a patrol yell together, then perform it for the troop.</p>
+      <label class="fld" for="yell">Write your yell here</label>
+      <textarea id="yell" placeholder="e.g. Tuff Donkeys, hee-haw, we kick more butt than you ever saw!"></textarea>
+      <div class="rows mt16">
+        <div class="row task" data-flag="yellDone">
+          <span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="#C9E265" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>
+          <span class="label">We performed our yell for the whole troop</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">Task 2 &middot; Summer Camp Roster</div>
+      <p class="muted mt8">Tick everyone in your patrol who is coming to summer camp, so we know real numbers for tents, food and merit badge sign ups.</p>
+      <div class="rows" id="campRows"></div>
+      <div class="prog">
+        <div class="track"><div class="fill" id="campFill"></div></div>
+        <span class="n" id="campCount">0 going</span>
+      </div>
+      <label class="fld" for="notes">Questions or things you need for camp (optional)</label>
+      <textarea id="notes" placeholder="Gear questions, merit badge picks, who still needs a form signed…"></textarea>
+    </div>
+
+    <div class="mt24">
+      <button class="btn-submit" id="submitBtn">Submit check in</button>
+      <div class="err" id="formErr"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SUCCESS ===== -->
+<section id="vDone" class="hide">
+  <div class="wrap">
+    <div class="success">
+      <div class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="#163B2B" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>
+      <h2>Check in sent</h2>
+      <p id="doneMsg">Nice work. Your patrol's check in is in.</p>
+      <div class="mt24" style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <button class="btn-ghost" id="copyBtn">Copy summary</button>
+        <button class="btn-ghost" id="anotherBtn">Another patrol</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SPL DASHBOARD ===== -->
+<section id="vSpl" class="hide">
+  <div class="wrap">
+    <div class="eyebrow">SPL view</div>
+    <h2 style="font-size:29px;margin-top:6px">Tonight's check ins</h2>
+    <p class="muted mt8" id="splSummary">Loading…</p>
+    <div class="mt16"><button class="btn-ghost" id="refreshBtn">Refresh</button></div>
+    <div id="splBody" class="mt16"></div>
+  </div>
+</section>
+
+<script>
+/* ==========================================================================
+   1. CONFIG — change these three things and nothing else.
+   ========================================================================== */
+var CONFIG = {
+  // Code you give the patrol leaders in the leadership group chat.
+  LEADER_CODE : "patrol26",
+
+  // YOUR private code. Opens the results dashboard. Do not share this one.
+  SPL_CODE    : "haresh-spl",
+
+  // Paste your Google Apps Script web app URL here to collect results privately.
+  // Leave as "" and the site still works — leaders use "Copy summary" instead.
+  ENDPOINT    : "",
+
+  MEETING     : "Summer Camp Prep"
+};
+
+/* ==========================================================================
+   2. PATROL ROSTERS
+   ========================================================================== */
+var PATROLS = [
+  { name:"Old Mariners", color:"#2F6B4F", members:[
+    "Haresh Thiyagarajan","Abhimanyu Arvindh","Siddhant Lodha","Lucas M Rivera"
+  ]},
+  { name:"Tuff Donkeys", color:"#B3702E", members:[
+    "Ansh Jain","Aarav Agrawal","Pratyush Bhattacharjee","Kian Chung","Ryan Featonby",
+    "Aarush Goyal","Liam Jackson","Geervan Lenkalapally","Matthew R Li","Atharv Sharma",
+    "Evan Sizemore","Abhinav V Varanasi"
+  ]},
+  { name:"Lucrative Limes", color:"#6E8F1E", members:[
+    "Sumay Gulwani","Shivank Abhyaker","Sean Blankenburg","Drew Francis","Taerin Jeong",
+    "Gautham Karthik","Connor Ollenberger","Caleb L Rivera","Nik Sarad","Ritvik Singh",
+    "Sanjay Srinivasan"
+  ]},
+  { name:"Lovable Lemons", color:"#C2A21B", members:[
+    "Jack R Troost","Harshit Agrawal","Srikar Annamraju","Aryan Bansal",
+    "Dakshay Geenapalli Venkata","John C VI Jackson","Angad Kochar",
+    "Varsith Rathinasabapathy","Aiden M Rivera","Siddhan K Saxena","Patrik Werkun"
+  ]}
+];
+
+/* ==========================================================================
+   3. APP
+   ========================================================================== */
+var TICK = '<svg viewBox="0 0 24 24" fill="none" stroke="#C9E265" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
+
+var state = { patrol:null, present:{}, camp:{}, yellDone:false, submitted:{}, lastSummary:"" };
+
+function $(id){ return document.getElementById(id); }
+function show(id){
+  ["vGate","vPick","vForm","vDone","vSpl"].forEach(function(v){ $(v).classList.add("hide"); });
+  $(id).classList.remove("hide");
+  window.scrollTo(0,0);
+}
+function esc(s){
+  return String(s==null?"":s).replace(/[&<>"']/g,function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+  });
+}
+function store(k,v){ try{ if(v===undefined) return localStorage.getItem(k); localStorage.setItem(k,v);}catch(e){ return null; } }
+
+/* ---- gate ---- */
+function tryEnter(){
+  var v = $("code").value.trim().toLowerCase();
+  $("gateErr").textContent = "";
+  if(!v){ $("gateErr").textContent = "Enter the code to continue."; return; }
+  if(v === CONFIG.SPL_CODE.toLowerCase()){ $("backBtn").classList.remove("hide"); openSpl(); return; }
+  if(v === CONFIG.LEADER_CODE.toLowerCase()){ store("pc_ok","1"); openPick(); return; }
+  $("gateErr").textContent = "That code isn't right. Check the group chat.";
+  $("code").value = "";
+}
+$("enterBtn").addEventListener("click", tryEnter);
+$("code").addEventListener("keydown", function(e){ if(e.key === "Enter") tryEnter(); });
+
+/* ---- patrol picker ---- */
+function openPick(){
+  $("backBtn").classList.add("hide");
+  var html = "";
+  PATROLS.forEach(function(p,i){
+    var done = state.submitted[p.name];
+    html += '<button data-i="'+i+'">'
+          +   '<span class="dot" style="background:'+p.color+'"></span>'
+          +   '<span class="nm">'+esc(p.name)+'</span>'
+          +   (done ? '<span class="done-tag">Checked in</span>'
+                    : '<span class="ct">'+p.members.length+' scouts</span>')
+          + '</button>';
+  });
+  $("pickList").innerHTML = html;
+  Array.prototype.forEach.call($("pickList").querySelectorAll("button"), function(b){
+    b.addEventListener("click", function(){ openForm(PATROLS[+b.dataset.i]); });
+  });
+  show("vPick");
+}
+
+/* ---- form ---- */
+function openForm(p){
+  state.patrol = p; state.present = {}; state.camp = {}; state.yellDone = false;
+  $("formTitle").textContent = p.name;
+  $("formEyebrow").textContent = CONFIG.MEETING;
+  $("yell").value = ""; $("notes").value = ""; $("formErr").textContent = "";
+
+  $("attRows").innerHTML  = p.members.map(function(m,i){ return rowHtml(m,"att",i); }).join("");
+  $("campRows").innerHTML = p.members.map(function(m,i){ return rowHtml(m,"camp",i); }).join("");
+
+  wireRows($("attRows"),  state.present, updateAtt);
+  wireRows($("campRows"), state.camp,    updateCamp);
+
+  var yellRow = document.querySelector('.row[data-flag="yellDone"]');
+  yellRow.classList.remove("on");
+  yellRow.onclick = function(){
+    state.yellDone = !state.yellDone;
+    yellRow.classList.toggle("on", state.yellDone);
+  };
+
+  updateAtt(); updateCamp();
+  $("backBtn").classList.remove("hide");
+  show("vForm");
+}
+function rowHtml(name,kind,i){
+  return '<div class="row" data-k="'+kind+'" data-n="'+esc(name)+'" data-i="'+i+'">'
+       +   '<span class="box">'+TICK+'</span>'
+       +   '<span class="label">'+esc(name)+'</span>'
+       + '</div>';
+}
+function wireRows(container, bag, onChange){
+  Array.prototype.forEach.call(container.querySelectorAll(".row"), function(r){
+    r.addEventListener("click", function(){
+      var n = r.dataset.n;
+      bag[n] = !bag[n];
+      r.classList.toggle("on", !!bag[n]);
+      onChange();
+    });
+  });
+}
+function countOn(bag){ return Object.keys(bag).filter(function(k){ return bag[k]; }).length; }
+function updateAtt(){
+  var t = state.patrol.members.length, n = countOn(state.present);
+  $("attCount").textContent = n + " / " + t;
+  $("attFill").style.width = (t ? (n/t*100) : 0) + "%";
+}
+function updateCamp(){
+  var t = state.patrol.members.length, n = countOn(state.camp);
+  $("campCount").textContent = n + " going";
+  $("campFill").style.width = (t ? (n/t*100) : 0) + "%";
+}
+
+/* ---- submit ---- */
+function buildPayload(){
+  var p = state.patrol;
+  var present = p.members.filter(function(m){ return state.present[m]; });
+  var absent  = p.members.filter(function(m){ return !state.present[m]; });
+  var camp    = p.members.filter(function(m){ return state.camp[m]; });
+  return {
+    meeting:  CONFIG.MEETING,
+    patrol:   p.name,
+    date:     new Date().toISOString(),
+    present:  present,
+    absent:   absent,
+    campGoing:camp,
+    yell:     $("yell").value.trim(),
+    yellDone: state.yellDone,
+    notes:    $("notes").value.trim()
+  };
+}
+function payloadToText(d){
+  var L = [];
+  L.push(d.patrol + " — " + d.meeting);
+  L.push("Present (" + d.present.length + "/" + (d.present.length + d.absent.length) + "): " + (d.present.join(", ") || "none"));
+  if(d.absent.length) L.push("Absent: " + d.absent.join(", "));
+  L.push("Yell: " + (d.yell || "(not written)") + (d.yellDone ? " — performed" : " — not performed yet"));
+  L.push("Summer camp (" + d.campGoing.length + "): " + (d.campGoing.join(", ") || "none yet"));
+  if(d.notes) L.push("Notes: " + d.notes);
+  return L.join("\n");
+}
+$("submitBtn").addEventListener("click", function(){
+  var btn = this;
+  var d = buildPayload();
+  $("formErr").textContent = "";
+  if(d.present.length === 0){ $("formErr").textContent = "Tick at least one scout as present."; return; }
+
+  state.lastSummary = payloadToText(d);
+  state.submitted[d.patrol] = true;
+
+  if(!CONFIG.ENDPOINT){
+    $("doneMsg").textContent = "Tap Copy summary and paste it to Haresh.";
+    $("backBtn").classList.add("hide");
+    show("vDone");
+    return;
+  }
+  btn.disabled = true; btn.textContent = "Sending…";
+  fetch(CONFIG.ENDPOINT, {
+    method:"POST", mode:"no-cors",
+    headers:{ "Content-Type":"text/plain;charset=utf-8" },
+    body: JSON.stringify(d)
+  }).then(function(){
+    $("doneMsg").textContent = "Nice work. Haresh has your patrol's check in.";
+  }).catch(function(){
+    $("doneMsg").textContent = "Couldn't reach the server — tap Copy summary and send it to Haresh.";
+  }).then(function(){
+    btn.disabled = false; btn.textContent = "Submit check in";
+    $("backBtn").classList.add("hide");
+    show("vDone");
+  });
+});
+
+$("copyBtn").addEventListener("click", function(){
+  var b = this, t = state.lastSummary;
+  function ok(){ b.textContent = "Copied"; setTimeout(function(){ b.textContent = "Copy summary"; }, 1600); }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(ok, fallback);
+  } else { fallback(); }
+  function fallback(){
+    var ta = document.createElement("textarea");
+    ta.value = t; ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    try{ document.execCommand("copy"); ok(); }catch(e){ b.textContent = "Copy failed"; }
+    document.body.removeChild(ta);
+  }
+});
+$("anotherBtn").addEventListener("click", openPick);
+$("backBtn").addEventListener("click", function(){
+  if(!$("vSpl").classList.contains("hide")){ show("vGate"); $("backBtn").classList.add("hide"); $("code").value=""; return; }
+  openPick();
+});
+
+/* ---- SPL dashboard ---- */
+function openSpl(){ show("vSpl"); loadSpl(); }
+$("refreshBtn").addEventListener("click", loadSpl);
+
+function loadSpl(){
+  var body = $("splBody");
+  if(!CONFIG.ENDPOINT){
+    $("splSummary").textContent = "No results server connected yet.";
+    body.innerHTML = '<div class="empty">Add your Apps Script URL to <b>CONFIG.ENDPOINT</b> in this file to collect check ins here automatically.<br><br>Until then, patrol leaders send you their summary from the Copy summary button.</div>';
+    return;
+  }
+  $("splSummary").textContent = "Loading…";
+  body.innerHTML = "";
+  fetch(CONFIG.ENDPOINT + "?action=list")
+    .then(function(r){ return r.json(); })
+    .then(function(rows){ renderSpl(Array.isArray(rows) ? rows : []); })
+    .catch(function(){
+      $("splSummary").textContent = "Couldn't load results.";
+      body.innerHTML = '<div class="empty">Check that the Apps Script is deployed with access set to "Anyone".</div>';
+    });
+}
+function renderSpl(rows){
+  var today = new Date().toDateString();
+  var todays = rows.filter(function(r){ return new Date(r.date).toDateString() === today; });
+  var use = todays.length ? todays : rows;
+
+  if(!use.length){
+    $("splSummary").textContent = "No check ins yet.";
+    $("splBody").innerHTML = '<div class="empty">Nothing submitted yet tonight.</div>';
+    return;
+  }
+  var totalHere = 0, totalCamp = 0;
+  use.forEach(function(r){
+    totalHere += (r.present||[]).length;
+    totalCamp += (r.campGoing||[]).length;
+  });
+  $("splSummary").textContent = use.length + " of " + PATROLS.length + " patrols checked in · "
+    + totalHere + " scouts present · " + totalCamp + " going to summer camp";
+
+  $("splBody").innerHTML = use.map(function(r){
+    var present = (r.present||[]), absent = (r.absent||[]), camp = (r.campGoing||[]);
+    var h = '<div class="res">';
+    h += '<h3>' + esc(r.patrol) + '</h3>';
+    h += '<div class="meta">' + present.length + ' present · ' + absent.length + ' absent · '
+       + camp.length + ' going to camp · ' + new Date(r.date).toLocaleTimeString([], {hour:"numeric",minute:"2-digit"}) + '</div>';
+    if(present.length){
+      h += '<div class="chips">' + present.map(function(n){ return '<span class="chip">' + esc(n) + '</span>'; }).join("") + '</div>';
+    }
+    if(absent.length){
+      h += '<div class="chips">' + absent.map(function(n){ return '<span class="chip out">' + esc(n) + '</span>'; }).join("") + '</div>';
+    }
+    if(r.yell) h += '<div class="quote"><b>Yell' + (r.yellDone ? " (performed)" : " (not performed)") + ':</b>\n' + esc(r.yell) + '</div>';
+    if(r.notes) h += '<div class="quote"><b>Notes:</b>\n' + esc(r.notes) + '</div>';
+    h += '</div>';
+    return h;
+  }).join("");
+}
+
+/* ---- boot ---- */
+$("barSub").textContent = CONFIG.MEETING;
+if(store("pc_ok") === "1"){ openPick(); } else { show("vGate"); }
+</script>
+</body>
+</html>
