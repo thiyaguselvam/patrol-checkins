@@ -11,7 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 /* ============================================================
-   CONFIG is in the <script> at the bottom — passcodes live there.
+   CONFIG is in the script at the bottom. Passcodes live there.
    ============================================================ */
 :root{
   --paper:#F5F4EE;
@@ -278,7 +278,7 @@ label.fld{display:block;font-size:14.5px;font-weight:600;margin:16px 0 7px}
 
 <script>
 /* ==========================================================================
-   1. CONFIG — change these three things and nothing else.
+   1. CONFIG. Change these three things and nothing else.
    ========================================================================== */
 var CONFIG = {
   // Code you give the patrol leaders in the leadership group chat.
@@ -303,10 +303,10 @@ var CONFIG = {
    ========================================================================== */
 var PATROLS = [
   { name:"Old Mariners", color:"#2F6B4F", members:[
-    "Haresh Thiyagarajan","Abhimanyu Arvindh","Siddhant Lodha","Lucas M Rivera"
+    "Haresh Thiyagarajan","Abhimanyu Arvindh","Kian Chung","Siddhant Lodha","Lucas M Rivera"
   ]},
   { name:"Tuff Donkeys", color:"#B3702E", members:[
-    "Ansh Jain","Aarav Agrawal","Pratyush Bhattacharjee","Kian Chung","Ryan Featonby",
+    "Ansh Jain","Aarav Agrawal","Pratyush Bhattacharjee","Ryan Featonby",
     "Aarush Goyal","Liam Jackson","Geervan Lenkalapally","Matthew R Li","Atharv Sharma",
     "Evan Sizemore","Abhinav V Varanasi"
   ]},
@@ -447,10 +447,10 @@ function buildPayload(){
 }
 function payloadToText(d){
   var L = [];
-  L.push(d.patrol + " — " + d.meeting);
+  L.push(d.patrol + ", " + d.meeting);
   L.push("Present (" + d.present.length + "/" + (d.present.length + d.absent.length) + "): " + (d.present.join(", ") || "none"));
   if(d.absent.length) L.push("Absent: " + d.absent.join(", "));
-  L.push("Yell: " + (d.yell || "(not written)") + (d.yellDone ? " — performed" : " — not performed yet"));
+  L.push("Yell: " + (d.yell || "(not written)") + (d.yellDone ? " (performed)" : " (not performed yet)"));
   L.push("Summer camp (" + d.campGoing.length + "): " + (d.campGoing.join(", ") || "none yet"));
   if(d.notes) L.push("Notes: " + d.notes);
   return L.join("\n");
@@ -541,7 +541,7 @@ function openSpl(){
   $("splBody").innerHTML =
       '<a class="btn-submit" style="display:block;text-align:center;text-decoration:none;box-sizing:border-box" '
     + 'href="' + CONFIG.RESULTS_LINK + '" target="_blank" rel="noopener">Open results</a>'
-    + '<div class="muted mt16">Only you can read the data — signing in to Supabase is what unlocks it. '
+    + '<div class="muted mt16">Only you can read the data. Signing in to Supabase is what unlocks it. '
     + 'Inside the table, use <b>Export &rarr; CSV</b> to open it in Excel.</div>';
 }
 $("refreshBtn").addEventListener("click", openSpl);
