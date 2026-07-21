@@ -199,6 +199,17 @@ label.fld{display:block;font-size:14.5px;font-weight:600;margin:16px 0 7px}
     <h2 style="font-size:27px;margin-top:6px">Which patrol are you leading?</h2>
     <p class="muted mt8">Pick your patrol to start its check in.</p>
     <div class="pick" id="pickList"></div>
+    <div class="mt24"><button class="btn-ghost" id="campBtn">View summer camp groups</button></div>
+  </div>
+</section>
+
+<!-- ===== SUMMER CAMP GROUPS ===== -->
+<section id="vCamp" class="hide">
+  <div class="wrap">
+    <div class="eyebrow">Summer camp</div>
+    <h2 style="font-size:27px;margin-top:6px">Camp groups</h2>
+    <p class="muted mt8">18 scouts going, split three ways. These are camp groups only, your regular patrol does not change.</p>
+    <div id="campBody" class="mt16"></div>
   </div>
 </section>
 
@@ -323,6 +334,22 @@ var PATROLS = [
 ];
 
 /* ==========================================================================
+   2b. SUMMER CAMP GROUPS  (18 scouts, three groups of six)
+   Camp grouping only. Regular patrols above are unaffected.
+   ========================================================================== */
+var CAMP_GROUPS = [
+  { name:"Tuff Donkeys", color:"#B3702E", members:[
+    "Ansh Jain","Kian Chung","Ryan Featonby","Liam Jackson","Atharv Sharma","Evan Sizemore"
+  ]},
+  { name:"Lucrative Limes", color:"#6E8F1E", members:[
+    "Shivank Abhyaker","Gautham Karthik","Caleb L Rivera","Lucas M Rivera","Ritvik Singh","Haresh Thiyagarajan"
+  ]},
+  { name:"Lovable Lemons", color:"#C2A21B", members:[
+    "Srikar Annamraju","Abhimanyu Arvindh","John C VI Jackson","Aiden M Rivera","Siddhan K Saxena","Jack R Troost"
+  ]}
+];
+
+/* ==========================================================================
    3. APP
    ========================================================================== */
 var TICK = '<svg viewBox="0 0 24 24" fill="none" stroke="#C9E265" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
@@ -331,7 +358,7 @@ var state = { patrol:null, present:{}, camp:{}, yellDone:false, submitted:{}, la
 
 function $(id){ return document.getElementById(id); }
 function show(id){
-  ["vGate","vPick","vForm","vDone","vSpl"].forEach(function(v){ $(v).classList.add("hide"); });
+  ["vGate","vPick","vForm","vDone","vSpl","vCamp"].forEach(function(v){ $(v).classList.add("hide"); });
   $(id).classList.remove("hide");
   window.scrollTo(0,0);
 }
@@ -531,6 +558,22 @@ $("backBtn").addEventListener("click", function(){
   if(!$("vSpl").classList.contains("hide")){ show("vGate"); $("backBtn").classList.add("hide"); $("code").value=""; return; }
   openPick();
 });
+
+/* ---- summer camp groups ---- */
+function openCamp(){
+  $("campBody").innerHTML = CAMP_GROUPS.map(function(g){
+    return '<div class="res">'
+      + '<h3><span class="dot" style="background:' + g.color + ';display:inline-block;margin-right:8px"></span>'
+      + esc(g.name) + '</h3>'
+      + '<div class="meta">' + g.members.length + ' going</div>'
+      + '<div class="chips">' + g.members.map(function(n){
+          return '<span class="chip">' + esc(n) + '</span>'; }).join("") + '</div>'
+      + '</div>';
+  }).join("");
+  $("backBtn").classList.remove("hide");
+  show("vCamp");
+}
+$("campBtn").addEventListener("click", openCamp);
 
 /* ---- SPL results launcher ----
    The key in this page can WRITE check ins but deliberately cannot READ them,
